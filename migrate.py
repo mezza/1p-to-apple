@@ -326,10 +326,15 @@ def process_items(data: dict) -> tuple:
                         notes += "\n\n--- Additional Fields ---\n"
                     notes += "\n".join(extra_fields)
 
-                # For multiple URLs, create one row per URL (Apple Passwords
-                # treats each URL as a separate entry). If no URL, still create one row.
-                url_list = urls if urls else [""]
-                primary_url = url_list[0]
+                primary_url = urls[0] if urls else ""
+
+                # Append additional URLs to notes
+                if len(urls) > 1:
+                    url_lines = "\n".join(urls[1:])
+                    if notes:
+                        notes += f"\n\n--- Additional URLs ---\n{url_lines}"
+                    else:
+                        notes = f"--- Additional URLs ---\n{url_lines}"
 
                 migrated.append({
                     "Title": title,
@@ -339,17 +344,6 @@ def process_items(data: dict) -> tuple:
                     "Notes": notes,
                     "OTPAuth": totp,
                 })
-
-                # If multiple URLs, add extra rows with same credentials
-                for extra_url in url_list[1:]:
-                    migrated.append({
-                        "Title": f"{title} ({extra_url})",
-                        "URL": extra_url,
-                        "Username": username,
-                        "Password": password,
-                        "Notes": notes,
-                        "OTPAuth": totp,
-                    })
 
     return migrated, skipped
 
